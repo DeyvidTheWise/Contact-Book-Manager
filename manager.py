@@ -4,19 +4,27 @@ import os
 
 def read_contacts_from_csv(filename="contacts.csv"):
     contacts = []
+    contact_groups = {}
 
     if not os.path.exists(filename):
-        return contacts
+        return contacts, contact_groups
 
     try:
         with open(filename, mode="r", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 contacts.append(row)
+
+                group_name = row.get("group")
+                if group_name:
+                    if group_name not in contact_groups:
+                        contact_groups[group_name] = []
+                    contact_groups[group_name].append(row)
+
     except Exception as e:
         print(f"Error reading from file: {e}")
 
-    return contacts
+    return contacts, contact_groups
 
 
 def write_contacts_to_csv(contacts, filename="contacts.csv"):
@@ -49,6 +57,102 @@ def flatten_contact(contact):
     return flattened_contact
 
 
+def read_melodies_from_file(filename="melodies.txt"):
+    melodies = []
+
+    if not os.path.exists(filename):
+        return melodies
+
+    try:
+        with open(filename, mode="r", encoding="utf-8") as file:
+            for line in file.readlines():
+                melody_name, count = line.strip().split(",")
+                melodies.append({"name": melody_name, "count": int(count)})
+    except Exception as e:
+        print(f"Error reading from file: {e}")
+
+    return melodies
+
+
+def write_melodies_to_file(melodies, filename="melodies.txt"):
+    try:
+        with open(filename, mode="w", encoding="utf-8") as file:
+            for melody in melodies:
+                file.write(f"{melody['name']},{melody['count']}\n")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
+
+
+def add_melody(melodies):
+    if input_yes_no("Do you want to add a new melody? (y/n): ") == "y":
+        melody_name = input("Enter the name of the new melody: ")
+        melodies.append({"name": melody_name, "count": 0})
+        write_melodies_to_file(melodies)
+        print(f"Melody '{melody_name}' has been added.")
+    else:
+        print("Returning to main menu.")
+    return melodies
+
+
+def show_melodies(melodies):
+    print("\nMelodies:")
+    for index, melody in enumerate(melodies):
+        print(f"{index + 1}. {melody['name']} (used by {melody['count']} contact(s))")
+    print("\nPress Enter to return to the main menu.")
+
+    while True:
+        try:
+            user_input = input()
+            if user_input == "":
+                break
+            else:
+                print("Please press Enter to return to the main menu.")
+        except EOFError:
+            print(
+                "Unexpected input error. Please press Enter to return to the main menu."
+            )
+
+
+def delete_melody(melodies):
+    if input_yes_no("Do you want to delete a melody? (y/n): ") == "y":
+        print("Available melodies:")
+        for index, melody in enumerate(melodies):
+            print(f"{index + 1}. {melody['name']}")
+
+        valid_input = False
+        while not valid_input:
+            try:
+                melody_index = (
+                    int(input("Enter the number of the melody you want to delete: "))
+                    - 1
+                )
+                if 0 <= melody_index < len(melodies):
+                    valid_input = True
+                else:
+                    print(
+                        "Invalid input. Please enter a number corresponding to an available melody."
+                    )
+            except ValueError:
+                print("Invalid input. Please enter a valid number.")
+            except EOFError:
+                print("Unexpected input error. Please try again.")
+
+        melody = melodies[melody_index]
+
+        if melody["count"] == 0:
+            melodies.pop(melody_index)
+            write_melodies_to_file(melodies)
+            print(f"Melody '{melody['name']}' has been deleted.")
+        else:
+            print(
+                f"Cannot delete melody '{melody['name']}'. {melody['count']} contact(s) are using it."
+            )
+    else:
+        print("Returning to main menu.")
+
+    return melodies
+
+
 def main():
     while True:
         print_menu()
@@ -73,6 +177,12 @@ def main():
             import_export_contacts()
         elif user_input == "8":
             print_contact_list()
+        elif user_input == "9":
+            add_melody(melodies)
+        elif user_input == "10":
+            show_melodies(melodies)
+        elif user_input == "11":
+            delete_melody(melodies)
         else:
             print("Invalid input. Please enter a number between 0 and 8.")
 
@@ -137,8 +247,59 @@ def create_contact(
     return contact
 
 
-def add_contact():
-    pass
+def input_yes_no(prompt):
+    while True:
+        answer = input(prompt).strip().lower()
+        if answer in ["y", "n"]:
+            return answer
+        else:
+            print("Invalid input. Please enter 'y' for yes or 'n' for no.")
+
+
+def add_contact(contacts, contact_groups, melodies):
+    print("Adding a new contact")
+    name = input("Enter name: ")
+    mobile_phone = input("Enter mobile phone: ")
+
+    group = None
+    if input_yes_no("Do you want to add a group? (y/n): ") == "y":
+        group = input("Enter group: ")
+
+    melody = None
+    if input_yes_no("Do you want to add a melody? (y/n): ") == "y":
+        print("Available melodies:")
+        for index, melody in enumerate(melodies):
+            print(f"{index + 1}. {melody['name']}")
+        melody_index = int(input("Enter the number of the desired melody: ")) - 1
+        melody = melodies[melody_index]["name"]
+        melodies[melody_index]["count"] += 1
+
+    company = {}
+    if input_yes_no("Do you want to add company details? (y/n): ") == "y":
+        company_name = input("Enter company name: ")
+        occupation = input("Enter occupation: ")
+        address = input("Enter company address: ")
+        web_page = input("Enter company web page: ")
+        company = {
+            "name": company_name,
+            "occupation": occupation,
+            "address": address,
+            "web_page": web_page,
+        }
+
+    # Add more fields and subgroups as needed
+
+    contact = create_contact(
+        name, mobile_phone, group=group, melody=melody, company=company
+    )
+    contacts.append(contact)
+
+    if group:
+        if group not in contact_groups:
+            contact_groups[group] = []
+        contact_groups[group].append(contact)
+
+    return contacts, contact_groups
 
 
 def delete_contact():
@@ -170,4 +331,6 @@ def print_contact_list():
 
 
 if __name__ == "__main__":
+    contacts, contact_groups = read_contacts_from_csv()
+    melodies = read_melodies_from_file()
     main()
