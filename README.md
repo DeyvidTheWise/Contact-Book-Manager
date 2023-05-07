@@ -2,16 +2,14 @@
 
 ## Table of Contents
 
-- [Contact Book Manager](#contact-book-manager)
-  - [Table of Contents](#table-of-contents)
-    - [Introduction](#introduction)
-    - [Features](#features)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Data Storage](#data-storage)
-    - [Error Handling](#error-handling)
-    - [Contributing](#contributing)
-    - [License](#license)
+[Introduction](#introduction)
+[Features](#features)
+[Installation](#installation)
+[Usage](#usage)
+[Data Storage](#data-storage)
+[Error Handling](#error-handling)
+[Contributing](#contributing)
+[License](#license)
 
 ### Introduction
 
