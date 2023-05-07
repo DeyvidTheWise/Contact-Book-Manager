@@ -1,6 +1,7 @@
 import csv
 import os
 import json
+from datetime import datetime, timedelta
 
 
 def read_contacts_from_csv(filename="contacts.csv"):
@@ -351,30 +352,32 @@ def main():
                 contacts = update_contact(contacts, groups, melodies)
                 write_contacts_to_csv(contacts)
             elif user_input == "3":
-                delete_contact(contacts)
+                contacts = delete_contact(contacts)
                 write_contacts_to_csv(contacts)
             elif user_input == "4":
                 search_contact(contacts)
             elif user_input == "5":
-                add_group(groups)
+                groups = add_group(groups)
             elif user_input == "6":
                 show_groups(groups)
             elif user_input == "7":
-                delete_group(groups)
+                groups = delete_group(groups)
             elif user_input == "8":
-                manage_group_subscription(contacts, groups)
+                contacts, groups = manage_group_subscription(contacts, groups)
+                write_contacts_to_csv(contacts)
+                write_to_file(groups, "groups.txt")
             elif user_input == "9":
-                manage_reminders()
+                manage_birthday_reminders(contacts)
             elif user_input == "10":
-                print_contact_list()
+                print_contact_list(contacts)
             elif user_input == "11":
-                print_contact()
+                print_contact_details(contacts)
             elif user_input == "12":
-                add_melody(melodies)
+                melodies = add_melody(melodies)
             elif user_input == "13":
                 show_melodies(melodies)
             elif user_input == "14":
-                delete_melody(melodies)
+                melodies = delete_melody(melodies)
             else:
                 print("Invalid input. Please enter a number between 0 and 14.")
         except Exception as e:
@@ -658,7 +661,7 @@ def search_contact(contacts):
 def manage_group_subscription(contacts, groups):
     if not contacts:
         print("No contacts available to manage group subscriptions.")
-        return
+        return contacts, groups
 
     try:
         contact_mobile_phone = input(
@@ -666,7 +669,7 @@ def manage_group_subscription(contacts, groups):
         )
     except (KeyboardInterrupt, EOFError):
         print("\nCancelled group subscription management.")
-        return
+        return contacts, groups
 
     selected_contact = None
     for contact in contacts:
@@ -676,7 +679,7 @@ def manage_group_subscription(contacts, groups):
 
     if not selected_contact:
         print("No contact found with the provided mobile phone number.")
-        return
+        return contacts, groups
 
     print(f"Managing group subscription for: {selected_contact['name']}")
 
@@ -685,7 +688,7 @@ def manage_group_subscription(contacts, groups):
     else:
         print("Available groups:")
         for group in groups:
-            print(group)
+            print(f"{group['name']}: {group['count']} contacts")
 
     try:
         action = input(
@@ -693,7 +696,7 @@ def manage_group_subscription(contacts, groups):
         ).lower()
     except (KeyboardInterrupt, EOFError):
         print("\nCancelled group subscription management.")
-        return
+        return contacts, groups
 
     if action == "add":
         try:
@@ -702,20 +705,30 @@ def manage_group_subscription(contacts, groups):
             )
         except (KeyboardInterrupt, EOFError):
             print("\nCancelled group subscription management.")
-            return
+            return contacts, groups
+
+        group = next((group for group in groups if group["name"] == group_name), None)
+        if not group:
+            print(f"No group with the name {group_name} found.")
+            return contacts, groups
 
         if selected_contact["group"] == group_name:
             print(f"{selected_contact['name']} is already in the group {group_name}.")
         else:
-            if selected_contact["group"] and selected_contact["group"] in groups:
-                groups[selected_contact["group"]].remove(selected_contact)
+            if selected_contact["group"]:
+                old_group = next(
+                    (
+                        group
+                        for group in groups
+                        if group["name"] == selected_contact["group"]
+                    ),
+                    None,
+                )
+                if old_group:
+                    old_group["count"] -= 1
 
             selected_contact["group"] = group_name
-
-            if group_name not in groups:
-                groups[group_name] = []
-
-            groups[group_name].append(selected_contact)
+            group["count"] += 1
             print(
                 f"{selected_contact['name']} has been added to the group {group_name}."
             )
@@ -725,7 +738,12 @@ def manage_group_subscription(contacts, groups):
             print(f"{selected_contact['name']} is not in any group.")
         else:
             group_name = selected_contact["group"]
-            groups[group_name].remove(selected_contact)
+            group = next(
+                (group for group in groups if group["name"] == group_name), None
+            )
+            if group:
+                group["count"] -= 1
+
             selected_contact["group"] = None
             print(
                 f"{selected_contact['name']} has been removed from the group {group_name}."
@@ -733,17 +751,103 @@ def manage_group_subscription(contacts, groups):
     else:
         print("Invalid action. Please enter 'add' or 'remove'.")
 
-
-def manage_reminders():
-    pass
+    return contacts, groups
 
 
-def import_export_contacts():
-    pass
+def manage_birthday_reminders(contacts):
+    today = datetime.today()
+    ten_days_from_today = today + timedelta(days=10)
+
+    upcoming_birthdays = []
+
+    for contact in contacts:
+        birthday_str = contact["other"]["birth_day"]
+        if not birthday_str:
+            continue
+
+        try:
+            birthday = datetime.strptime(birthday_str, "%Y-%m-%d")
+        except ValueError:
+            print(
+                f"Invalid date format for {contact['name']}'s birthday: {birthday_str}"
+            )
+            continue
+
+        birthday = birthday.replace(year=today.year)
+
+        if today <= birthday <= ten_days_from_today:
+            upcoming_birthdays.append(contact)
+
+    if upcoming_birthdays:
+        print("Upcoming birthdays within 10 days:")
+        for contact in upcoming_birthdays:
+            print(f"{contact['name']} - {contact['other']['birth_day']}")
+    else:
+        print("No upcoming birthdays within 10 days.")
 
 
-def print_contact_list():
-    pass
+def print_contact_list(contacts):
+    if not contacts:
+        print("No contacts available.")
+        return
+
+    print("\nContacts summary:")
+    print(
+        "{:<20} {:<15} {:<20} {:<20}".format("Name", "Mobile Number", "Group", "Melody")
+    )
+
+    for contact in contacts:
+        name = contact["name"]
+        mobile_number = contact["mobile_phone"]
+        group = contact["group"] if contact["group"] else "-"
+        melody = contact["melody"] if contact["melody"] else "-"
+
+        print("{:<20} {:<15} {:<20} {:<20}".format(name, mobile_number, group, melody))
+
+
+def print_contact_details(contacts):
+    if not contacts:
+        print("No contacts available.")
+        return
+
+    for index, contact in enumerate(contacts):
+        print(f"{index + 1}. {contact['name']} ({contact['mobile_phone']})")
+
+    try:
+        contact_number = int(input("Enter the contact number: ")) - 1
+        if contact_number < 0 or contact_number >= len(contacts):
+            print("Invalid contact number.")
+            return
+
+        selected_contact = contacts[contact_number]
+        print("\nContact details:")
+
+        selected_contact = contacts[contact_number]
+        print("\nContact details:")
+
+        print(f"Name: {selected_contact['name']}")
+        print(f"Mobile phone: {selected_contact['mobile_phone']}")
+
+        print(
+            f"Group: {selected_contact['group'] if selected_contact['group'] else '-'}"
+        )
+        print(
+            f"Melody: {selected_contact['melody'] if selected_contact['melody'] else '-'}"
+        )
+
+        for key, value in selected_contact.items():
+            if key in ["name", "mobile_phone", "group", "melody"]:
+                continue
+
+            if isinstance(value, dict):
+                for sub_key, sub_value in value.items():
+                    label = f"{key.capitalize()} {sub_key.capitalize()}:"
+                    print(f"{label} {sub_value if sub_value else '-'}")
+            else:
+                print(f"{key.capitalize()}: {value if value else '-'}")
+
+    except (ValueError, KeyboardInterrupt, EOFError):
+        print("\nInvalid input or action canceled.")
 
 
 if __name__ == "__main__":
