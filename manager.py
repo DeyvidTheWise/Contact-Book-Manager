@@ -346,10 +346,14 @@ def main():
                 print("Exiting the program.")
                 break
             elif user_input == "1":
-                contacts = add_contact(contacts, groups, melodies)
+                contacts, groups, melodies = add_contact(contacts, groups, melodies)
+                write_to_file(groups, "groups.txt")
+                write_to_file(melodies, "melodies.txt")
                 write_contacts_to_csv(contacts)
             elif user_input == "2":
-                contacts = update_contact(contacts, groups, melodies)
+                contacts, groups, melodies = update_contact(contacts, groups, melodies)
+                write_to_file(groups, "groups.txt")
+                write_to_file(melodies, "melodies.txt")
                 write_contacts_to_csv(contacts)
             elif user_input == "3":
                 contacts = delete_contact(contacts)
@@ -576,7 +580,7 @@ def add_contact(contacts, groups, melodies):
 
     contacts.append(contact)
 
-    return contacts
+    return contacts, groups, melodies
 
 
 def update_contact(contacts, groups, melodies):
@@ -596,13 +600,13 @@ def update_contact(contacts, groups, melodies):
             print("Invalid contact number.")
             return contacts
 
-        updated_contact = add_contact([], groups, melodies)
+        updated_contact, groups, melodies = add_contact([], groups, melodies)
         contacts[selected_index] = updated_contact[0]
     except ValueError:
         print("Invalid input. Please enter a valid number.")
         return contacts
 
-    return contacts
+    return contacts, groups, melodies
 
 
 def delete_contact(contacts):

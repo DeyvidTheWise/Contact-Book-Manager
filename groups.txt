@@ -1,1 +1,5 @@
-
+Family,0
+Friends,0
+Coworkers,0
+Sports Club,0
+Neighbors,0

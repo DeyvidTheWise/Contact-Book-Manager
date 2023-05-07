@@ -4,43 +4,24 @@
 
 [Introduction](#introduction)
 [Features](#features)
-[Installation](#installation)
-[Usage](#usage)
-[Data Storage](#data-storage)
-[Error Handling](#error-handling)
 [Contributing](#contributing)
 [License](#license)
+[BG Documentation](#мениджър-на-контакти)
 
 ### Introduction
 
-Contact Book Manager is a Python-based application designed to help users efficiently manage their personal contacts. With an easy-to-use interface, users can import/export contacts, add/delete contacts, search and sort contacts, edit contact information, and schedule reminders for appointments.
+Contact Book Manager is a Python-based application designed to help users efficiently manage their personal contacts. With an easy-to-use interface, users can import/export contacts, add/delete contacts, search and sort contacts, edit contact information, and receive reminders for birthdays.
 
 ### Features
 
-Add new contacts with detailed information
-Delete and update contact information
-Search for contacts for quick access
-Create contact groups and add/delete contacts to/from groups
-Send birthday reminders for contacts 10 days prior to the scheduled day
-Import/Export contacts to/from other applications via .csv files
-Print contact lists to text files (common details only)
-Print detailed information of a selected contact to a text file
-
-### Installation
-
-Instructions for installing and setting up the Contact Book Manager application.
-
-### Usage
-
-Instructions for using the application, including adding, deleting, and editing contacts, as well as importing/exporting contacts to/from other applications.
-
-### Data Storage
-
-Information about data storage, including how the application uses a CSV file for data storage, and how read and write operations are handled.
-
-### Error Handling
-
-An explanation of error handling within the application, including the use of try-catch and except statements.
+- Add new contacts with detailed information
+- Delete and update contact information
+- Search for contacts for quick access
+- Create contact groups and add/delete contacts to/from groups
+- Send birthday reminders for contacts 10 days prior to the scheduled day
+- Import/Export contacts to/from other applications via .csv files
+- Print contact lists to text files (common details only)
+- Print detailed information of a selected contact to a text file
 
 ### Contributing
 
@@ -83,3 +64,17 @@ Thank you for your interest in contributing to the Contact Book Manager project!
 ### License
 
 Apache License 2.0: A permissive license similar to the MIT License but with additional terms covering patents and a requirement to include a NOTICE file if one exists. It allows for free use, modification, and distribution of your code, while providing some protection against patent litigation.
+
+---
+
+# МЕНИДЖЪР НА КОНТАКТИ
+
+## За проекта
+
+Проектът представлява мениджър на контакти, който предоставя възможност за съхранение, обработка и организация на контакти, групи и мелодии. Основните функционалности са:
+
+1. Добавяне, актулизиране и премахване на контакти - За контактите има създаден шаблон с полета, като основните полета, които трябва да бъдат попълнени са име, номер, група и мелодия. Ако досега не са били въвеждани групи и мелодии от потребителя, то той няма да има възможност да си избере. Всички данни за контактите биват съхранявани в CSV файл, което се намира в директорията на проекта.
+2. Добавяне, актулизиране и премахване на групи и мелодии. - Клиентът има възможност да зададе свои собствени мелодии и групи, като тези данни се съхраняват в TXT файлове. За тях се пазят име и брояч. Броячът се използва при изтриването на информацията, като се проверява дали някой от контактите не е в дадената група или не звъни с дадената мелодия.
+3. Управление на контакти и групи - Потребителят има възможност да добавя или премахва контакти от различни групи.
+4. Известия за предстоящ рожден ден - Тази опция представя списък с всички контакти, които имат рожден ден в следващите 10 дни. Системата работи с дати във формат YYYY-MM-DD.
+5. Опция за доклади - Крайният потребител може да изисква обща информация за всички потребители или детайлна за един.
