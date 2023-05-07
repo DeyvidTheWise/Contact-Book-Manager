@@ -1,3 +1,7 @@
+import csv
+import os
+
+
 def main():
     while True:
         print_menu()
@@ -37,6 +41,45 @@ def print_menu():
     print("7. Import/Export contacts")
     print("8. Print contact list")
     print("0. Exit the program")
+
+
+def create_contact(
+    name, mobile_phone, company={}, other_phones={}, emails={}, melody={}, other={}
+):
+    contact = {
+        "name": name,
+        "mobile_phone": mobile_phone,
+        "company": {
+            "name": company.get("name", None),
+            "occupation": company.get("occupation", None),
+            "address": company.get("address", None),
+            "web_page": company.get("web_page", None),
+        },
+        "other_phones": {
+            "mobile_phone_2": other_phones.get("mobile_phone_2", None),
+            "mobile_phone_3": other_phones.get("mobile_phone_3", None),
+            "home_phone": other_phones.get("home_phone", None),
+            "office_phone": other_phones.get("office_phone", None),
+        },
+        "emails": {
+            "private_email_1": emails.get("private_email_1", None) if emails else None,
+            "private_email_2": emails.get("private_email_2", None) if emails else None,
+            "office_email": emails.get("office_email", None) if emails else None,
+        },
+        "melody": melody,
+        "other": {
+            "address": other.get("address", None) if other else None,
+            "birth_day": other.get("birth_day", None) if other else None,
+            "notes": other.get("notes", None) if other else None,
+            "spouse": {
+                "name": other.get("spouse", {}).get("name", None),
+                "birthday": other.get("spouse", {}).get("birthday", None),
+                "notes": other.get("spouse", {}).get("notes", None),
+            },
+            "children": other.get("children", {}),
+        },
+    }
+    return contact
 
 
 def add_contact():
