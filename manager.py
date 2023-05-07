@@ -1,35 +1,53 @@
 import csv
 import os
+import json
 
 
 def read_contacts_from_csv(filename="contacts.csv"):
     contacts = []
-    contact_groups = {}
-
-    if not os.path.exists(filename):
-        return contacts, contact_groups
 
     try:
         with open(filename, mode="r", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                contacts.append(row)
-
-                group_name = row.get("group")
-                if group_name:
-                    if group_name not in contact_groups:
-                        contact_groups[group_name] = []
-                    contact_groups[group_name].append(row)
-
+                contact = unflatten_contact(row)
+                contacts.append(contact)
+    except FileNotFoundError:
+        print(f"No such file: {filename}")
     except Exception as e:
-        print(f"Error reading from file: {e}")
+        print(f"Error reading file: {e}")
 
-    return contacts, contact_groups
+    return contacts
 
 
 def write_contacts_to_csv(contacts, filename="contacts.csv"):
     if not contacts:
         return
+
+    fieldnames = [
+        "name",
+        "mobile_phone",
+        "group",
+        "company_name",
+        "company_occupation",
+        "company_address",
+        "company_web_page",
+        "other_phones_mobile_phone_2",
+        "other_phones_mobile_phone_3",
+        "other_phones_home_phone",
+        "other_phones_office_phone",
+        "emails_private_email_1",
+        "emails_private_email_2",
+        "emails_office_email",
+        "melody",
+        "other_address",
+        "other_birth_day",
+        "other_notes",
+        "other_spouse_name",
+        "other_spouse_birthday",
+        "other_spouse_notes",
+        "other_children",
+    ]
 
     try:
         with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
@@ -44,17 +62,69 @@ def write_contacts_to_csv(contacts, filename="contacts.csv"):
 
 
 def flatten_contact(contact):
-    flattened_contact = {}
-
-    for key, value in contact.items():
-        if isinstance(value, dict):
-            for sub_key, sub_value in value.items():
-                flattened_key = f"{key}_{sub_key}"
-                flattened_contact[flattened_key] = sub_value
-        else:
-            flattened_contact[key] = value
-
+    flattened_contact = {
+        "name": contact["name"],
+        "mobile_phone": contact["mobile_phone"],
+        "group": contact["group"],
+        "company_name": contact["company"]["name"],
+        "company_occupation": contact["company"]["occupation"],
+        "company_address": contact["company"]["address"],
+        "company_web_page": contact["company"]["web_page"],
+        "other_phones_mobile_phone_2": contact["other_phones"]["mobile_phone_2"],
+        "other_phones_mobile_phone_3": contact["other_phones"]["mobile_phone_3"],
+        "other_phones_home_phone": contact["other_phones"]["home_phone"],
+        "other_phones_office_phone": contact["other_phones"]["office_phone"],
+        "emails_private_email_1": contact["emails"]["private_email_1"],
+        "emails_private_email_2": contact["emails"]["private_email_2"],
+        "emails_office_email": contact["emails"]["office_email"],
+        "melody": contact["melody"],
+        "other_address": contact["other"]["address"],
+        "other_birth_day": contact["other"]["birth_day"],
+        "other_notes": contact["other"]["notes"],
+        "other_spouse_name": contact["other"]["spouse"]["name"],
+        "other_spouse_birthday": contact["other"]["spouse"]["birthday"],
+        "other_spouse_notes": contact["other"]["spouse"]["notes"],
+        "other_children": contact["other"]["children"],
+    }
     return flattened_contact
+
+
+def unflatten_contact(flat_contact):
+    contact = {
+        "name": flat_contact["name"],
+        "mobile_phone": flat_contact["mobile_phone"],
+        "group": flat_contact["group"],
+        "company": {
+            "name": flat_contact["company_name"],
+            "occupation": flat_contact["company_occupation"],
+            "address": flat_contact["company_address"],
+            "web_page": flat_contact["company_web_page"],
+        },
+        "other_phones": {
+            "mobile_phone_2": flat_contact["other_phones_mobile_phone_2"],
+            "mobile_phone_3": flat_contact["other_phones_mobile_phone_3"],
+            "home_phone": flat_contact["other_phones_home_phone"],
+            "office_phone": flat_contact["other_phones_office_phone"],
+        },
+        "emails": {
+            "private_email_1": flat_contact["emails_private_email_1"],
+            "private_email_2": flat_contact["emails_private_email_2"],
+            "office_email": flat_contact["emails_office_email"],
+        },
+        "melody": flat_contact["melody"],
+        "other": {
+            "address": flat_contact["other_address"],
+            "birth_day": flat_contact["other_birth_day"],
+            "notes": flat_contact["other_notes"],
+            "spouse": {
+                "name": flat_contact["other_spouse_name"],
+                "birthday": flat_contact["other_spouse_birthday"],
+                "notes": flat_contact["other_spouse_notes"],
+            },
+            "children": json.loads(flat_contact["other_children"]),
+        },
+    }
+    return contact
 
 
 def read_from_file(filename):
@@ -262,55 +332,72 @@ def delete_group(groups):
 
 
 def main():
-    while True:
-        print_menu()
-        user_input = input("Please enter the number of your choice (0 to exit): ")
+    contacts = read_contacts_from_csv()
+    melodies = read_from_file("melodies.txt")
+    groups = read_from_file("groups.txt")
 
-        if user_input == "0":
-            print("Exiting the program.")
-            break
-        elif user_input == "1":
-            add_contact()
-        elif user_input == "2":
-            delete_contact()
-        elif user_input == "3":
-            update_contact()
-        elif user_input == "4":
-            search_contact()
-        elif user_input == "5":
-            create_group()
-        elif user_input == "6":
-            manage_reminders()
-        elif user_input == "7":
-            import_export_contacts()
-        elif user_input == "8":
-            print_contact_list()
-        elif user_input == "9":
-            add_group(groups)
-        elif user_input == "10":
-            show_groups(groups)
-        elif user_input == "11":
-            delete_group(groups)
-        elif user_input == "12":
-            add_melody(melodies)
-        elif user_input == "13":
-            show_melodies(melodies)
-        elif user_input == "14":
-            delete_melody(melodies)
-        else:
-            print("Invalid input. Please enter a number between 0 and 8.")
+    while True:
+        try:
+            print_menu()
+            user_input = input("Please enter the number of your choice (0 to exit): ")
+
+            if user_input == "0":
+                print("Exiting the program.")
+                break
+            elif user_input == "1":
+                contacts = add_contact(contacts, groups, melodies)
+                write_contacts_to_csv(contacts)
+            elif user_input == "2":
+                contacts = update_contact(contacts, groups, melodies)
+                write_contacts_to_csv(contacts)
+            elif user_input == "3":
+                delete_contact(contacts)
+                write_contacts_to_csv(contacts)
+            elif user_input == "4":
+                search_contact(contacts)
+            elif user_input == "5":
+                add_group(groups)
+            elif user_input == "6":
+                show_groups(groups)
+            elif user_input == "7":
+                delete_group(groups)
+            elif user_input == "8":
+                manage_group_subscription(contacts, groups)
+            elif user_input == "9":
+                manage_reminders()
+            elif user_input == "10":
+                print_contact_list()
+            elif user_input == "11":
+                print_contact()
+            elif user_input == "12":
+                add_melody(melodies)
+            elif user_input == "13":
+                show_melodies(melodies)
+            elif user_input == "14":
+                delete_melody(melodies)
+            else:
+                print("Invalid input. Please enter a number between 0 and 14.")
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
 
 
 def print_menu():
     print("\nContact Book Manager Menu")
     print("1. Add a new contact")
-    print("2. Delete a contact")
-    print("3. Update contact details")
+    print("2. Update contact details")
+    print("3. Delete a contact")
     print("4. Search for a contact")
     print("5. Create a contact group")
-    print("6. Manage birthday reminders")
-    print("7. Import/Export contacts")
-    print("8. Print contact list")
+    print("6. Show all contact groups")
+    print("7. Delete a contact groups")
+    print("8. Manage group subscriptions")
+    print("9. Manage birthday reminders")
+    print("10. Print contact list")
+    print("11. Print contact")
+    print("12. Add a melody")
+    print("13. Show melodies")
+    print("14. Delete a melody")
     print("0. Exit the program")
 
 
@@ -371,24 +458,27 @@ def input_yes_no(prompt):
 
 
 def add_contact(contacts, groups, melodies):
-    print("Adding a new contact")
+    print("Adding a new contact.")
     name = input("Enter name: ")
     mobile_phone = input("Enter mobile phone: ")
 
     group = None
-    if input_yes_no("Do you want this contact to a group? (y/n): ") == "y":
+    if (
+        groups
+        and input_yes_no("Do you want to add the contact to a group? (y/n): ") == "y"
+    ):
         print("Available groups:")
-        for index, group in enumerate(groups):
-            print(f"{index + 1}. {group['name']}")
+        for index, group_item in enumerate(groups):
+            print(f"{index + 1}. {group_item['name']}")
         group_index = int(input("Enter the number of the desired group: ")) - 1
         group = groups[group_index]["name"]
         groups[group_index]["count"] += 1
 
-    melody = None
-    if input_yes_no("Do you want to add a melody? (y/n): ") == "y":
+    melody = "default"
+    if melodies and input_yes_no("Do you want to add a melody? (y/n): ") == "y":
         print("Available melodies:")
-        for index, melody in enumerate(melodies):
-            print(f"{index + 1}. {melody['name']}")
+        for index, melody_item in enumerate(melodies):
+            print(f"{index + 1}. {melody_item['name']}")
         melody_index = int(input("Enter the number of the desired melody: ")) - 1
         melody = melodies[melody_index]["name"]
         melodies[melody_index]["count"] += 1
@@ -462,13 +552,13 @@ def add_contact(contacts, groups, melodies):
                 }
                 children.append(child)
 
-    other = {
-        "address": address,
-        "birth_day": birth_day,
-        "notes": notes,
-        "spouse": spouse,
-        "children": children,
-    }
+        other = {
+            "address": address,
+            "birth_day": birth_day,
+            "notes": notes,
+            "spouse": spouse,
+            "children": children,
+        }
 
     contact = create_contact(
         name,
@@ -480,25 +570,168 @@ def add_contact(contacts, groups, melodies):
         emails=emails,
         other=other,
     )
+
     contacts.append(contact)
 
     return contacts
 
 
-def delete_contact():
-    pass
+def update_contact(contacts, groups, melodies):
+    if not contacts:
+        print("No contacts to update.")
+        return contacts
+
+    print("Select a contact to update or press 0 to return to the main menu:")
+    for index, contact in enumerate(contacts):
+        print(f"{index + 1}. {contact['name']} ({contact['mobile_phone']})")
+
+    try:
+        selected_index = int(input("Enter the contact's number: ")) - 1
+        if selected_index == -1:
+            return contacts
+        if selected_index < 0 or selected_index >= len(contacts):
+            print("Invalid contact number.")
+            return contacts
+
+        updated_contact = add_contact([], groups, melodies)
+        contacts[selected_index] = updated_contact[0]
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
+        return contacts
+
+    return contacts
 
 
-def update_contact():
-    pass
+def delete_contact(contacts):
+    if not contacts:
+        print("No contacts to delete.")
+        return contacts
+
+    print("Select a contact to delete or press 0 to return to the main menu:")
+    for index, contact in enumerate(contacts):
+        print(f"{index + 1}. {contact['name']} ({contact['mobile_phone']})")
+
+    try:
+        selected_index = int(input("Enter the contact's number: ")) - 1
+        if selected_index == -1:
+            return contacts
+        if selected_index < 0 or selected_index >= len(contacts):
+            print("Invalid contact number.")
+            return contacts
+
+        del contacts[selected_index]
+        print("Contact deleted.")
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
+        return contacts
+
+    return contacts
 
 
-def search_contact():
-    pass
+def search_contact(contacts):
+    if not contacts:
+        print("No contacts to search.")
+        return
+
+    try:
+        search_query = input("Enter a search query (name or mobile phone): ").lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled search.")
+        return
+
+    matching_contacts = [
+        contact
+        for contact in contacts
+        if search_query in contact["name"].lower()
+        or search_query in contact["mobile_phone"]
+    ]
+
+    if not matching_contacts:
+        print("No contacts found matching your search query.")
+        return
+
+    print("Matching contacts:")
+    for contact in matching_contacts:
+        print(f"{contact['name']} ({contact['mobile_phone']})")
 
 
-def create_group():
-    pass
+def manage_group_subscription(contacts, groups):
+    if not contacts:
+        print("No contacts available to manage group subscriptions.")
+        return
+
+    try:
+        contact_mobile_phone = input(
+            "Enter the mobile phone of the contact you want to manage: "
+        )
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled group subscription management.")
+        return
+
+    selected_contact = None
+    for contact in contacts:
+        if contact["mobile_phone"] == contact_mobile_phone:
+            selected_contact = contact
+            break
+
+    if not selected_contact:
+        print("No contact found with the provided mobile phone number.")
+        return
+
+    print(f"Managing group subscription for: {selected_contact['name']}")
+
+    if not groups:
+        print("No groups available.")
+    else:
+        print("Available groups:")
+        for group in groups:
+            print(group)
+
+    try:
+        action = input(
+            "Enter 'add' to add the contact to a group or 'remove' to remove the contact from a group: "
+        ).lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled group subscription management.")
+        return
+
+    if action == "add":
+        try:
+            group_name = input(
+                "Enter the name of the group you want to add the contact to: "
+            )
+        except (KeyboardInterrupt, EOFError):
+            print("\nCancelled group subscription management.")
+            return
+
+        if selected_contact["group"] == group_name:
+            print(f"{selected_contact['name']} is already in the group {group_name}.")
+        else:
+            if selected_contact["group"] and selected_contact["group"] in groups:
+                groups[selected_contact["group"]].remove(selected_contact)
+
+            selected_contact["group"] = group_name
+
+            if group_name not in groups:
+                groups[group_name] = []
+
+            groups[group_name].append(selected_contact)
+            print(
+                f"{selected_contact['name']} has been added to the group {group_name}."
+            )
+
+    elif action == "remove":
+        if not selected_contact["group"]:
+            print(f"{selected_contact['name']} is not in any group.")
+        else:
+            group_name = selected_contact["group"]
+            groups[group_name].remove(selected_contact)
+            selected_contact["group"] = None
+            print(
+                f"{selected_contact['name']} has been removed from the group {group_name}."
+            )
+    else:
+        print("Invalid action. Please enter 'add' or 'remove'.")
 
 
 def manage_reminders():
@@ -514,7 +747,4 @@ def print_contact_list():
 
 
 if __name__ == "__main__":
-    contacts, contact_groups = read_contacts_from_csv()
-    melodies = read_from_file("melodies.txt")
-    groups = read_from_file("groups.txt")
     main()
