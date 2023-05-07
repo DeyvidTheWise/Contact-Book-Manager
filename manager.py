@@ -57,40 +57,53 @@ def flatten_contact(contact):
     return flattened_contact
 
 
-def read_melodies_from_file(filename="melodies.txt"):
-    melodies = []
+def read_from_file(filename):
+    data = []
 
     if not os.path.exists(filename):
-        return melodies
+        return data
 
     try:
         with open(filename, mode="r", encoding="utf-8") as file:
             for line in file.readlines():
-                melody_name, count = line.strip().split(",")
-                melodies.append({"name": melody_name, "count": int(count)})
+                name, count = line.strip().split(",")
+                data.append({"name": name, "count": int(count)})
     except Exception as e:
         print(f"Error reading from file: {e}")
 
-    return melodies
+    return data
 
 
-def write_melodies_to_file(melodies, filename="melodies.txt"):
+def write_to_file(data, filename):
     try:
         with open(filename, mode="w", encoding="utf-8") as file:
-            for melody in melodies:
-                file.write(f"{melody['name']},{melody['count']}\n")
+            for item in data:
+                file.write(f"{item['name']},{item['count']}\n")
     except Exception as e:
         print(f"Error writing to file: {e}")
 
 
 def add_melody(melodies):
-    if input_yes_no("Do you want to add a new melody? (y/n): ") == "y":
-        melody_name = input("Enter the name of the new melody: ")
-        melodies.append({"name": melody_name, "count": 0})
-        write_melodies_to_file(melodies)
-        print(f"Melody '{melody_name}' has been added.")
+    print("Current melodies:")
+    if not melodies:
+        print("No melodies available.")
     else:
-        print("Returning to main menu.")
+        for index, melody in enumerate(melodies):
+            print(f"{index + 1}. {melody['name']}")
+
+    try:
+        melody_name = input(
+            "Enter the name of the new melody (or press Enter to return to the main menu): "
+        )
+        if melody_name == "":
+            print("Returning to main menu.")
+        else:
+            melodies.append({"name": melody_name, "count": 0})
+            write_to_file(melodies, "melodies.txt")
+            print(f"Melody '{melody_name}' has been added.")
+    except EOFError:
+        print("Unexpected input error. Please try again.")
+
     return melodies
 
 
@@ -114,8 +127,10 @@ def show_melodies(melodies):
 
 
 def delete_melody(melodies):
-    if input_yes_no("Do you want to delete a melody? (y/n): ") == "y":
-        print("Available melodies:")
+    print("Available melodies:")
+    if not melodies:
+        print("No melodies available.")
+    else:
         for index, melody in enumerate(melodies):
             print(f"{index + 1}. {melody['name']}")
 
@@ -123,10 +138,17 @@ def delete_melody(melodies):
         while not valid_input:
             try:
                 melody_index = (
-                    int(input("Enter the number of the melody you want to delete: "))
+                    int(
+                        input(
+                            "Enter the number of the melody you want to delete (or enter '0' to return to the main menu): "
+                        )
+                    )
                     - 1
                 )
-                if 0 <= melody_index < len(melodies):
+                if melody_index == -1:
+                    print("Returning to main menu.")
+                    return melodies
+                elif 0 <= melody_index < len(melodies):
                     valid_input = True
                 else:
                     print(
@@ -141,16 +163,102 @@ def delete_melody(melodies):
 
         if melody["count"] == 0:
             melodies.pop(melody_index)
-            write_melodies_to_file(melodies)
+            write_to_file(melodies, "melodies.txt")
             print(f"Melody '{melody['name']}' has been deleted.")
         else:
             print(
                 f"Cannot delete melody '{melody['name']}'. {melody['count']} contact(s) are using it."
             )
-    else:
-        print("Returning to main menu.")
-
     return melodies
+
+
+def add_group(groups):
+    print("Current groups:")
+    if not groups:
+        print("No groups available.")
+    else:
+        for index, group in enumerate(groups):
+            print(f"{index + 1}. {group['name']}")
+
+    try:
+        group_name = input(
+            "Enter the name of the new group (or press Enter to return to the main menu): "
+        )
+        if group_name == "":
+            print("Returning to main menu.")
+        else:
+            groups.append({"name": group_name, "count": 0})
+            write_to_file(groups, "groups.txt")
+            print(f"Group '{group_name}' has been added.")
+    except EOFError:
+        print("Unexpected input error. Please try again.")
+
+    return groups
+
+
+def show_groups(groups):
+    print("\nGroups:")
+    for index, group in enumerate(groups):
+        print(f"{index + 1}. {group['name']} (contains {group['count']} contact(s))")
+    print("\nPress Enter to return to the main menu.")
+
+    while True:
+        try:
+            user_input = input()
+            if user_input == "":
+                break
+            else:
+                print("Please press Enter to return to the main menu.")
+        except EOFError:
+            print(
+                "Unexpected input error. Please press Enter to return to the main menu."
+            )
+
+
+def delete_group(groups):
+    print("Available groups:")
+    if not groups:
+        print("No groups available.")
+    else:
+        for index, group in enumerate(groups):
+            print(f"{index + 1}. {group['name']}")
+
+        valid_input = False
+        while not valid_input:
+            try:
+                group_index = (
+                    int(
+                        input(
+                            "Enter the number of the group you want to delete (or enter '0' to return to the main menu): "
+                        )
+                    )
+                    - 1
+                )
+                if group_index == -1:
+                    print("Returning to main menu.")
+                    return melodies
+                elif 0 <= group_index < len(groups):
+                    valid_input = True
+                else:
+                    print(
+                        "Invalid input. Please enter a number corresponding to an available group."
+                    )
+            except ValueError:
+                print("Invalid input. Please enter a valid number.")
+            except EOFError:
+                print("Unexpected input error. Please try again.")
+
+        group = groups[group_index]
+
+        if group["count"] == 0:
+            groups.pop(group_index)
+            write_to_file(groups, "groups.txt")
+            print(f"Group '{group['name']}' has been deleted.")
+        else:
+            print(
+                f"Cannot delete group '{group['name']}'. {group['count']} contact(s) are in it."
+            )
+    return groups
 
 
 def main():
@@ -178,10 +286,16 @@ def main():
         elif user_input == "8":
             print_contact_list()
         elif user_input == "9":
-            add_melody(melodies)
+            add_group(groups)
         elif user_input == "10":
-            show_melodies(melodies)
+            show_groups(groups)
         elif user_input == "11":
+            delete_group(groups)
+        elif user_input == "12":
+            add_melody(melodies)
+        elif user_input == "13":
+            show_melodies(melodies)
+        elif user_input == "14":
             delete_melody(melodies)
         else:
             print("Invalid input. Please enter a number between 0 and 8.")
@@ -332,5 +446,6 @@ def print_contact_list():
 
 if __name__ == "__main__":
     contacts, contact_groups = read_contacts_from_csv()
-    melodies = read_melodies_from_file()
+    melodies = read_from_file("melodies.txt")
+    groups = read_from_file("groups.txt")
     main()
