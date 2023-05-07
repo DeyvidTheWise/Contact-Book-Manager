@@ -370,14 +370,19 @@ def input_yes_no(prompt):
             print("Invalid input. Please enter 'y' for yes or 'n' for no.")
 
 
-def add_contact(contacts, contact_groups, melodies):
+def add_contact(contacts, groups, melodies):
     print("Adding a new contact")
     name = input("Enter name: ")
     mobile_phone = input("Enter mobile phone: ")
 
     group = None
-    if input_yes_no("Do you want to add a group? (y/n): ") == "y":
-        group = input("Enter group: ")
+    if input_yes_no("Do you want this contact to a group? (y/n): ") == "y":
+        print("Available groups:")
+        for index, group in enumerate(groups):
+            print(f"{index + 1}. {group['name']}")
+        group_index = int(input("Enter the number of the desired group: ")) - 1
+        group = groups[group_index]["name"]
+        groups[group_index]["count"] += 1
 
     melody = None
     if input_yes_no("Do you want to add a melody? (y/n): ") == "y":
@@ -401,19 +406,83 @@ def add_contact(contacts, contact_groups, melodies):
             "web_page": web_page,
         }
 
-    # Add more fields and subgroups as needed
+    other_phones = {}
+    if input_yes_no("Do you want to add other phone numbers? (y/n): ") == "y":
+        mobile_phone_2 = input("Enter mobile phone 2: ")
+        mobile_phone_3 = input("Enter mobile phone 3: ")
+        home_phone = input("Enter home phone: ")
+        office_phone = input("Enter office phone: ")
+        other_phones = {
+            "mobile_phone_2": mobile_phone_2,
+            "mobile_phone_3": mobile_phone_3,
+            "home_phone": home_phone,
+            "office_phone": office_phone,
+        }
+
+    emails = {}
+    if input_yes_no("Do you want to add email addresses? (y/n): ") == "y":
+        private_email_1 = input("Enter private email 1: ")
+        private_email_2 = input("Enter private email 2: ")
+        office_email = input("Enter office email: ")
+        emails = {
+            "private_email_1": private_email_1,
+            "private_email_2": private_email_2,
+            "office_email": office_email,
+        }
+
+    other = {}
+    if input_yes_no("Do you want to add other details? (y/n): ") == "y":
+        address = input("Enter address: ")
+        birth_day = input("Enter birth day: ")
+        notes = input("Enter notes: ")
+
+        spouse = {}
+        if input_yes_no("Do you want to add spouse details? (y/n): ") == "y":
+            spouse_name = input("Enter spouse name: ")
+            spouse_birthday = input("Enter spouse birthday: ")
+            spouse_notes = input("Enter spouse notes: ")
+            spouse = {
+                "name": spouse_name,
+                "birthday": spouse_birthday,
+                "notes": spouse_notes,
+            }
+
+        children = []
+        if input_yes_no("Do you want to add children details? (y/n): ") == "y":
+            while True:
+                child_name = input("Enter child name (or type 'q' to finish): ")
+                if child_name.lower() == "q":
+                    break
+                child_birthday = input("Enter child birthday: ")
+                child_notes = input("Enter child notes: ")
+                child = {
+                    "name": child_name,
+                    "birthday": child_birthday,
+                    "notes": child_notes,
+                }
+                children.append(child)
+
+    other = {
+        "address": address,
+        "birth_day": birth_day,
+        "notes": notes,
+        "spouse": spouse,
+        "children": children,
+    }
 
     contact = create_contact(
-        name, mobile_phone, group=group, melody=melody, company=company
+        name,
+        mobile_phone,
+        group=group,
+        melody=melody,
+        company=company,
+        other_phones=other_phones,
+        emails=emails,
+        other=other,
     )
     contacts.append(contact)
 
-    if group:
-        if group not in contact_groups:
-            contact_groups[group] = []
-        contact_groups[group].append(contact)
-
-    return contacts, contact_groups
+    return contacts
 
 
 def delete_contact():
