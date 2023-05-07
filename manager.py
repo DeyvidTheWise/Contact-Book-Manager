@@ -2,6 +2,53 @@ import csv
 import os
 
 
+def read_contacts_from_csv(filename="contacts.csv"):
+    contacts = []
+
+    if not os.path.exists(filename):
+        return contacts
+
+    try:
+        with open(filename, mode="r", newline="", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                contacts.append(row)
+    except Exception as e:
+        print(f"Error reading from file: {e}")
+
+    return contacts
+
+
+def write_contacts_to_csv(contacts, filename="contacts.csv"):
+    if not contacts:
+        return
+
+    try:
+        with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for contact in contacts:
+                flattened_contact = flatten_contact(contact)
+                writer.writerow(flattened_contact)
+            csvfile.flush()
+    except Exception as e:
+        print(f"Error writing to file: {e}")
+
+
+def flatten_contact(contact):
+    flattened_contact = {}
+
+    for key, value in contact.items():
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                flattened_key = f"{key}_{sub_key}"
+                flattened_contact[flattened_key] = sub_value
+        else:
+            flattened_contact[key] = value
+
+    return flattened_contact
+
+
 def main():
     while True:
         print_menu()
@@ -44,11 +91,19 @@ def print_menu():
 
 
 def create_contact(
-    name, mobile_phone, company={}, other_phones={}, emails={}, melody={}, other={}
+    name,
+    mobile_phone,
+    group=None,
+    company={},
+    other_phones={},
+    emails={},
+    melody={},
+    other={},
 ):
     contact = {
         "name": name,
         "mobile_phone": mobile_phone,
+        "group": group,
         "company": {
             "name": company.get("name", None),
             "occupation": company.get("occupation", None),
